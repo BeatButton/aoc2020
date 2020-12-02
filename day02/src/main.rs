@@ -5,19 +5,25 @@ fn main() -> anyhow::Result<()> {
     for line in INPUT.lines() {
         let line = line;
         let mut iter = line.chars();
-        let from: usize = iter
+        let idx1 = iter
             .by_ref()
             .take_while(|&ch| ch != '-')
             .collect::<String>()
-            .parse()?;
-        let to: usize = iter
+            .parse::<usize>()?
+            - 1;
+        let idx2 = iter
             .by_ref()
             .take_while(|&ch| ch != ' ')
             .collect::<String>()
-            .parse()?;
-        let character = iter.next().unwrap();
-        let count = iter.filter(|&ch| ch == character).count();
-        if from <= count && count <= to {
+            .parse::<usize>()?
+            - 1;
+        let ch = iter.next().unwrap();
+        iter.by_ref().take(2).for_each(|_| {});
+        let password: String = iter.collect();
+
+        if (password.chars().nth(idx1).unwrap() == ch)
+            != (password.chars().nth(idx2).unwrap() == ch)
+        {
             num_valid += 1;
         }
     }
