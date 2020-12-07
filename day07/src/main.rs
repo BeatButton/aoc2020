@@ -1,3 +1,5 @@
+use std::vec;
+
 use petgraph::graphmap::DiGraphMap;
 
 const INPUT: &str = include_str!("input");
@@ -21,14 +23,15 @@ fn main() {
         }
     }
 
-    let mut total = 0;
-
-    for node in graph.nodes() {
-        if petgraph::algo::has_path_connecting(&graph, node, "shiny gold bag", None) {
-            total += 1;
+    let mut out = 0;
+    let mut stack: Vec<&str> = vec!["shiny gold bag"];
+    while let Some(bag) = stack.pop() {
+        out += 1;
+        for (_, next, &amount) in graph.edges(bag) {
+            stack.extend(vec![next; amount])
         }
     }
-    total -= 1;
+    out -= 1;
 
-    println!("{}", total);
+    println!("{}", out);
 }
