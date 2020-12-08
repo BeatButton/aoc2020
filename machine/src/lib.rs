@@ -48,6 +48,9 @@ impl Machine {
 
     pub fn step(&mut self) -> Result {
         let idx = self.idx as usize;
+        if idx == self.program.len() {
+            return Ok(Outcome::Halted);
+        }
         if self.seen[idx] {
             return Err(Error::InfiniteLoop);
         }
@@ -63,6 +66,12 @@ impl Machine {
             Op::Nop(_) => self.idx += 1,
         }
         Ok(Outcome::Running)
+    }
+
+    pub fn reset(&mut self) {
+        self.acc = 0;
+        self.idx = 0;
+        self.seen.iter_mut().for_each(|seen| *seen = false);
     }
 }
 

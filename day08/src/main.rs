@@ -15,10 +15,11 @@ fn main() {
 
     for i in 0..machine.program.len() {
         swap(&mut machine.program, i);
-        if let Err(machine::Error::InfiniteLoop) = machine.run() {
+        if let Ok(machine::Outcome::Halted) = machine.run() {
             println!("{}", machine.acc);
             break;
         }
         swap(&mut machine.program, i);
+        machine.reset();
     }
 }
