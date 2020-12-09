@@ -1,3 +1,5 @@
+use std::cmp;
+
 use itertools::Itertools;
 
 const INPUT: &str = include_str!("input");
@@ -31,8 +33,8 @@ fn main() {
         let mut total = start;
         for &next in &data[i + 1..] {
             total += next;
-            min = std::cmp::min(next, min);
-            max = std::cmp::max(next, max);
+            min = cmp::min(next, min);
+            max = cmp::max(next, max);
             if total >= invalid {
                 break;
             }
