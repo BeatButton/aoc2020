@@ -1,4 +1,4 @@
-use std::cmp;
+use std::cmp::Ordering;
 
 use itertools::Itertools;
 
@@ -11,7 +11,7 @@ fn main() {
         .map(|line| line.parse::<u64>().unwrap())
         .collect();
 
-    let mut invalid = 0;
+    let mut target = 0;
     for window in data.as_slice().windows(PREAMBLE_LEN + 1) {
         let i = window[PREAMBLE_LEN];
         let window = &window[..PREAMBLE_LEN];
@@ -22,25 +22,29 @@ fn main() {
             .map(|(a, b)| a + b)
             .any(|x| x == i)
         {
-            invalid = i;
+            target = i;
             break;
         }
     }
 
-    for (i, &start) in data.iter().enumerate() {
-        let mut min = start;
-        let mut max = start;
-        let mut total = start;
-        for &next in &data[i + 1..] {
-            total += next;
-            min = cmp::min(next, min);
-            max = cmp::max(next, max);
-            if total >= invalid {
+    let mut from = 0;
+    let mut to = 0;
+    let mut total = 0;
+    loop {
+        match total.cmp(&target) {
+            Ordering::Greater => {
+                total -= data[from];
+                from += 1;
+            }
+            Ordering::Less => {
+                total += data[to];
+                to += 1;
+            }
+            Ordering::Equal => {
+                let (min, max) = data[from..to].iter().minmax().into_option().unwrap();
+                println!("{}", min + max);
                 break;
             }
-        }
-        if total == invalid {
-            println!("{}", min + max);
         }
     }
 }
