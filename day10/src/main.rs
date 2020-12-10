@@ -1,25 +1,22 @@
-use lru::LruCache;
+use fnv::FnvHashMap as HashMap;
 
 const INPUT: &str = include_str!("input");
 
-fn fuck<'a>(adapters: &'a [u16], path: Vec<u16>, cache: &mut LruCache<&'a [u16], usize>) -> usize {
-    if let Some(n) = cache.get(&adapters) {
-        return *n;
-    }
-    if adapters.is_empty() {
+fn solve(idx: usize, adapters: &[u16], seen: &mut HashMap<usize, usize>) -> usize {
+    if let Some(&n) = seen.get(&idx) {
+        n
+    } else if idx == adapters.len() - 1 {
         1
     } else {
-        let prev = *path.last().unwrap();
-        adapters
+        adapters[idx..]
             .iter()
             .enumerate()
-            .take_while(|(_, v)| (prev..=(prev + 3)).contains(v))
-            .map(|(idx, &adapter)| {
-                let mut path = path.clone();
-                path.push(adapter);
-                let adapts = &adapters[idx + 1..];
-                let out = fuck(adapts, path, cache);
-                cache.put(adapts, out);
+            .skip(1)
+            .take_while(|(_, &v)| v <= adapters[idx] + 3)
+            .map(|(i, _)| {
+                let arg = i + idx;
+                let out = solve(arg, adapters, seen);
+                seen.insert(arg, out);
                 out
             })
             .sum()
@@ -28,11 +25,11 @@ fn fuck<'a>(adapters: &'a [u16], path: Vec<u16>, cache: &mut LruCache<&'a [u16],
 
 fn main() {
     let mut input: Vec<u16> = INPUT.lines().map(|line| line.parse().unwrap()).collect();
+    input.push(0);
     input.sort_unstable();
+    let mut seen: HashMap<usize, usize> = HashMap::default();
 
-    let mut cache = LruCache::new(1_000_000_000);
-
-    let out = fuck(&input, vec![0], &mut cache);
+    let out = solve(0, &input, &mut seen);
 
     println!("{}", out);
 }
