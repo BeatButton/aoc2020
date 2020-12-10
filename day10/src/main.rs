@@ -2,7 +2,7 @@ use fnv::FnvHashMap as HashMap;
 
 const INPUT: &str = include_str!("input");
 
-fn solve(idx: usize, adapters: &[u16], seen: &mut HashMap<usize, usize>) -> usize {
+fn solve(idx: usize, adapters: &[u16], seen: &mut HashMap<usize, u64>) -> u64 {
     if let Some(&n) = seen.get(&idx) {
         n
     } else if idx == adapters.len() - 1 {
@@ -27,7 +27,7 @@ fn main() {
     let mut input: Vec<u16> = INPUT.lines().map(|line| line.parse().unwrap()).collect();
     input.push(0);
     input.sort_unstable();
-    let mut seen: HashMap<usize, usize> = HashMap::default();
+    let mut seen: HashMap<usize, u64> = HashMap::default();
 
     let out = solve(0, &input, &mut seen);
 
