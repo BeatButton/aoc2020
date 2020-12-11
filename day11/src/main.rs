@@ -1,6 +1,15 @@
-use std::cmp::max;
-
 const INPUT: &str = include_str!("input");
+
+const DIRECTIONS: [(isize, isize); 8] = [
+    (-1, 0),
+    (-1, 1),
+    (0, 1),
+    (1, 1),
+    (1, 0),
+    (1, -1),
+    (0, -1),
+    (-1, -1),
+];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Cell {
@@ -32,21 +41,12 @@ fn tick(seats: &[Vec<Cell>]) -> Vec<Vec<Cell>> {
     let mut out: Vec<Vec<Cell>> = seats.iter().map(|row| row.to_vec()).collect();
     for (r, row) in seats.iter().enumerate() {
         for (c, &cell) in row.iter().enumerate() {
-            let adjacent = if let Seat(_) = cell {
-                get_adjacent_cells(&seats, r, c)
+            let num_occupied = if let Seat(_) = cell {
+                get_num_occupied_seats(&seats, r as isize, c as isize)
             } else {
                 continue;
             };
-            /*println!(
-                "At ({}, {}) there were {} adjacent cells",
-                r,
-                c,
-                adjacent.len()
-            );*/
-            let num_occupied: usize = adjacent
-                .into_iter()
-                .map(|cell| if let Seat(Occupied) = cell { 1 } else { 0 })
-                .sum();
+            /*println!("{}, {} => {}", r, c, num_occupied,);*/
             match cell {
                 Seat(Empty) => {
                     if num_occupied == 0 {
@@ -54,7 +54,7 @@ fn tick(seats: &[Vec<Cell>]) -> Vec<Vec<Cell>> {
                     }
                 }
                 Seat(Occupied) => {
-                    if num_occupied >= 4 {
+                    if num_occupied >= 5 {
                         out[r][c] = Seat(Empty);
                     }
                 }
@@ -65,27 +65,28 @@ fn tick(seats: &[Vec<Cell>]) -> Vec<Vec<Cell>> {
     out
 }
 
-fn get_adjacent_cells(cells: &[Vec<Cell>], row_idx: usize, col_idx: usize) -> Vec<Cell> {
-    let row_min = max(row_idx, 1) - 1;
-    let row_take = if row_idx == 0 { 2 } else { 3 };
-    let col_min = max(col_idx, 1) - 1;
-    let col_take = if col_idx == 0 { 2 } else { 3 };
-
-    cells
-        .iter()
-        .enumerate()
-        .skip(row_min)
-        .take(row_take)
-        .map(|(r, row)| {
-            row.iter()
-                .enumerate()
-                .skip(col_min)
-                .take(col_take)
-                .filter(move |&(c, _cell)| c != col_idx || r != row_idx)
-                .map(|(_c, &cell)| cell)
-        })
-        .flatten()
-        .collect()
+fn get_num_occupied_seats(cells: &[Vec<Cell>], row: isize, col: isize) -> usize {
+    let mut out = 0;
+    let num_rows = cells.len();
+    let num_cols = cells[0].len();
+    for &(dc, dr) in &DIRECTIONS {
+        let mut r = row;
+        let mut c = col;
+        loop {
+            r += dr;
+            c += dc;
+            if r < 0 || r as usize >= num_rows || c < 0 || c as usize >= num_cols {
+                break;
+            }
+            if let Seat(is_occupied) = cells[r as usize][c as usize] {
+                if let Occupied = is_occupied {
+                    out += 1;
+                }
+                break;
+            }
+        }
+    }
+    out
 }
 
 fn main() {
@@ -94,7 +95,7 @@ fn main() {
         .map(|line| line.chars().map(Cell::new).collect())
         .collect();
 
-    for i in 0.. {
+    loop {
         /*println!("{}", i);
         for row in &seats {
             for cell in row {
