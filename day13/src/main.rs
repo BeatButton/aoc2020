@@ -1,22 +1,28 @@
+use modinverse::modinverse;
+
 const INPUT: &str = include_str!("input");
 
 fn main() {
-    let mut lines = INPUT.lines();
-    let estimate: u32 = lines.next().unwrap().parse().unwrap();
-    let busses = lines
-        .next()
+    let busses = INPUT
+        .lines()
+        .nth(1)
         .unwrap()
         .split(',')
-        .filter_map(|time| time.parse::<u32>().ok())
+        .enumerate()
+        .filter_map(|(idx, time)| time.parse::<i64>().map(|time| (idx, time)).ok())
         .collect::<Vec<_>>();
+
+    let m = busses.iter().map(|&(_idx, time)| time).product::<i64>();
 
     println!(
         "{}",
         busses
             .iter()
-            .map(|&bus| (bus, bus - (estimate - (estimate / bus) * bus)))
-            .min_by_key(|&(_bus, wait)| wait)
-            .map(|(bus, wait)| wait * bus)
-            .unwrap()
-    );
+            .map(|&(idx, time)| {
+                let b = m / time;
+                (time - idx as i64) * b * modinverse(b, time).unwrap()
+            })
+            .sum::<i64>()
+            % m
+    )
 }
