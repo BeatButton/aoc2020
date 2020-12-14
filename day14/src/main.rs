@@ -28,6 +28,8 @@ fn main() {
                 }
             }))
         } else {
+            let value = value.parse::<u64>().unwrap();
+
             let mut addr = instr
                 .chars()
                 .skip(4)
@@ -35,20 +37,20 @@ fn main() {
                 .collect::<String>()
                 .parse::<u64>()
                 .unwrap();
-            let value = value.parse::<u64>().unwrap();
+
             addr |= one_mask;
+            addr = floating_masks.iter().fold(addr, |acc, &mask| acc & !mask);
 
-            for &mask in &floating_masks {
-                addr &= !mask;
-            }
-
-            for num_masks in 0..=floating_masks.len() {
-                for masks in floating_masks.iter().cloned().combinations(num_masks) {
-                    let a = masks.iter().fold(addr, |acc, &mask| acc | mask);
-
-                    mem.insert(a, value);
-                }
-            }
+            mem.extend(
+                (0..=floating_masks.len())
+                    .map(|num_masks| {
+                        floating_masks
+                            .iter()
+                            .combinations(num_masks)
+                            .map(|masks| (masks.iter().fold(addr, |acc, &&mask| acc | mask), value))
+                    })
+                    .flatten(),
+            );
         }
     }
     println!("{}", mem.values().sum::<u64>());
