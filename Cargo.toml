@@ -17,6 +17,3 @@ members = [
     "day15",
     "machine",
 ]
-
-[profile.release]
-lto = true
