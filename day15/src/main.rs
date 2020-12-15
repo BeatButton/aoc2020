@@ -4,29 +4,25 @@ const INPUT: &str = include_str!("input");
 const TARGET: u64 = 30000000;
 
 fn main() {
-    let mut idx = 0;
-    let mut seen: HashMap<u64, u64> = HashMap::default();
-    for n in INPUT
+    let mut seen: HashMap<u64, u64> = INPUT
         .trim_end()
         .split(',')
         .map(str::parse::<u64>)
         .map(Result::unwrap)
-    {
-        seen.insert(n, idx);
-        idx += 1;
-    }
+        .enumerate()
+        .map(|(idx, k)| (k, idx as _))
+        .collect();
 
-    let mut curr = 0;
-    let mut prev = 0;
-
-    for idx in idx..TARGET {
-        prev = curr;
-        if let Some(past) = seen.get(&curr) {
-            curr = idx - past;
-        } else {
-            curr = 0;
-        }
-        seen.insert(prev, idx);
-    }
-    println!("{}", prev);
+    println!(
+        "{}",
+        ((seen.len() as _)..(TARGET - 1)).fold(0, |prev, idx| {
+            let curr = if let Some(past) = seen.get(&prev) {
+                idx - past
+            } else {
+                0
+            };
+            seen.insert(prev, idx);
+            curr
+        })
+    );
 }
