@@ -1,28 +1,21 @@
-use std::cmp;
+use std::{cmp, ops::RangeInclusive};
 
 use fnv::FnvHashSet as HashSet;
+use itertools::iproduct;
 
 const INPUT: &str = include_str!("input");
 
 type World = HashSet<(i64, i64, i64, i64)>;
 
+fn adjacent(n: i64) -> RangeInclusive<i64> {
+    (n - 1)..=(n + 1)
+}
+
 fn num_active_neighbors(x: i64, y: i64, z: i64, w: i64, world: &World) -> usize {
-    let mut count = 0;
-    for x2 in (x - 1)..=(x + 1) {
-        for y2 in (y - 1)..=(y + 1) {
-            for z2 in (z - 1)..=(z + 1) {
-                for w2 in (w - 1)..=(w + 1) {
-                    if x2 == x && y2 == y && z2 == z && w2 == w {
-                        continue;
-                    }
-                    if world.contains(&(x2, y2, z2, w2)) {
-                        count += 1;
-                    }
-                }
-            }
-        }
-    }
-    count
+    iproduct!(adjacent(x), adjacent(y), adjacent(z), adjacent(w))
+        .filter(|coord| world.contains(coord))
+        .count()
+        - world.contains(&(x, y, z, w)) as usize
 }
 
 fn tick(world: &mut World) {
@@ -74,11 +67,9 @@ fn main() {
                 .map(move |(y, _byte)| (x as i64, y as i64, 0, 0))
         })
         .flatten()
-        .inspect(|a| println!("{:?}", a))
         .collect();
 
     for _ in 0..6 {
-        println!("{}", world.len());
         tick(&mut world);
     }
 
