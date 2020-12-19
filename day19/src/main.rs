@@ -1,0 +1,67 @@
+const INPUT: &str = include_str!("input");
+
+fn matches(rules: &[&str], text: &str) -> bool {
+    let (matched, length) = matches_impl(0, rules, 0, text);
+    matched && length == text.len()
+}
+
+fn matches_impl(rule_idx: usize, rules: &[&str], mut text_idx: usize, text: &str) -> (bool, usize) {
+    //    println!("applying rule {} to {}", rules[rule_idx], &text[text_idx..]);
+    if text_idx == text.len() {
+        return (false, 0);
+    }
+    let expr = rules[rule_idx];
+    if expr.starts_with('"') {
+        (text[text_idx..text_idx + 1] == expr[1..2], 1)
+    } else {
+        let mut matched;
+        for subexpr in expr.split(" | ") {
+            let mut total_delta = 0;
+            matched = true;
+            for rule_idx in subexpr.split(' ') {
+                if let (true, delta) =
+                    matches_impl(rule_idx.parse::<usize>().unwrap(), rules, text_idx, text)
+                {
+                    text_idx += delta;
+                    total_delta += delta;
+                } else {
+                    matched = false;
+                    break;
+                }
+            }
+            if matched {
+                return (true, total_delta);
+            }
+            text_idx -= total_delta;
+        }
+        (false, 0)
+    }
+}
+
+pub fn main() {
+    let mut lines = INPUT.lines();
+    let mut rules = lines
+        .by_ref()
+        .take_while(|line| !line.is_empty())
+        .map(|line| {
+            let idx = line
+                .bytes()
+                .enumerate()
+                .find(|&(_idx, b)| b == b' ')
+                .unwrap()
+                .0;
+            (line[..idx - 1].parse::<usize>().unwrap(), &line[idx + 1..])
+        })
+        .collect::<Vec<_>>();
+
+    rules.sort_unstable_by_key(|&(idx, _rule)| idx);
+
+    let rules = rules
+        .into_iter()
+        .map(|(_idx, rule)| rule)
+        .collect::<Vec<_>>();
+
+    let out = lines.filter(|line| matches(&rules, line)).count();
+
+    println!("{}", out);
+}
